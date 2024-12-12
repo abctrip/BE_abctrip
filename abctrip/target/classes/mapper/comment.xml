@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.ssafy.abctrip.comment.model.mapper.CommentMapper">
+	<resultMap type="commentDto" id="comment">
+		<result column="free_comment_id" property="freeCommentId" />
+		<result column="free_comment_content" property="freeCommentContent" />
+		<result column="free_post_id" property="freePostId" />
+		<result column="user_id" property="userId" />
+		<result column="created_at" property="createdAt" />
+		<result column="updated_at" property="updatedAt" />
+		<result column="nick_name" property="nickName" />
+
+		<!-- <result column="parent_comment_id" property="freeContent" /> -->
+	</resultMap>
+
+
+	<insert id="writeComment" parameterType="commentDto">
+		insert into free_comments (free_comment_content, free_post_id, user_id, created_at)
+		value (#{freeCommentContent}, #{freePostId}, #{userId}, NOW());
+	</insert>
+
+	<update id="modifyComment" parameterType="commentDto">
+		update free_comments
+		set free_comment_content = #{freeCommentContent}, updated_at = NOW()
+		where free_comment_id = #{freeCommentId}
+	</update>
+
+	<select id="getComments" parameterType="int" resultMap="comment">
+		select f.free_comment_id, f.free_comment_content, f.created_at, u.nick_name, u.user_id
+		from free_comments f
+		join users u
+		on f.user_id = u.user_id
+		where f.free_post_id = #{articleNo};
+	</select>
+
+	<delete id="deleteComment" parameterType="int">
+		delete from
+		free_comments
+		where free_comment_id = #{commentNo}
+	</delete>
+
+</mapper>

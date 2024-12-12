@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.abctrip.map.model.mapper.AttractionLikeMapper">
+
+    <insert id="insertLike">
+        INSERT INTO attraction_like_history (content_id, user_id)
+        VALUES (#{contentId}, #{userId})
+    </insert>
+
+    <delete id="deleteLike">
+        DELETE FROM attraction_like_history
+        WHERE content_id = #{contentId} AND user_id = #{userId}
+    </delete>
+
+    <update id="increaseLikeCount">
+        INSERT INTO attraction_likes (content_id, like_count)
+        VALUES (#{contentId}, 1)
+        ON DUPLICATE KEY UPDATE like_count = like_count + 1
+    </update>
+
+    <update id="decreaseLikeCount">
+        UPDATE attraction_likes
+        SET like_count = like_count - 1
+        WHERE content_id = #{contentId} AND like_count > 0
+    </update>
+
+    <!-- <select id="getLikeCount" resultType="int">
+        SELECT like_count
+        FROM attraction_likes
+        WHERE content_id = #{contentId}
+    </select> -->
+    
+    <select id="getLikeCount" resultType="int">
+    SELECT 
+        CASE 
+            WHEN EXISTS (
+                SELECT 1 
+                FROM attraction_likes 
+                WHERE content_id = #{contentId}
+            ) 
+            THEN (
+                SELECT like_count 
+                FROM attraction_likes 
+                WHERE content_id = #{contentId}
+            )
+            ELSE 0
+        END as like_count
+	</select>
+
+    <select id="hasUserLiked" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM attraction_like_history
+        WHERE content_id = #{contentId} AND user_id = #{userId}
+    </select>
+
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.ssafy.abctrip.statistics.model.mapper.StatisticsMapper">
+	
+	<resultMap type="StatisticsDto" id="statistics">
+		<result column="title" property="attractionTitle" />
+		<result column="like_count" property="attractionLikeCount" />
+
+		<!-- <result column="parent_comment_id" property="freeContent" /> -->
+	</resultMap>
+	
+	
+	<select id="getHotplaceRank" resultMap="statistics">
+		SELECT att.title, attlike.like_count
+		FROM attractions att
+		JOIN attraction_likes attlike
+		ON att.content_id = attlike.content_id
+		ORDER BY attlike.like_count DESC
+		LIMIT 5;
+	</select>
+
+
+</mapper>

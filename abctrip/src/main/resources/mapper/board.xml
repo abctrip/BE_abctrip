@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.abctrip.board.model.mapper.BoardMapper">
+
+	<resultMap type="boardDto" id="article">
+		<result column="free_post_id" property="freePostId"/>
+		<result column="free_title" property="freeTitle"/>
+		<result column="free_contents" property="freeContent"/>
+		<result column="free_views" property="freeViews"/>
+		<result column="created_at" property="createdAt"/>
+		<result column="user_id" property="userId"/>
+		<result column="nick_name" property="nickName"/>
+	</resultMap>
+	
+	<resultMap type="boardDto" id="viewArticle" extends="article">
+		<collection property="fileInfos" column="article_no" javaType="list" ofType="fileInfoDto" select="fileInfoList"/>
+	</resultMap>
+	
+	<resultMap type="fileInfoDto" id="file">
+		<result column="save_folder" property="saveFolder"/>
+		<result column="original_file" property="originalFile"/>
+		<result column="save_file" property="saveFile"/>
+	</resultMap>
+	
+	<insert id="registerFile" parameterType="boardDto">
+		insert into file_info (article_no, save_folder, original_file, save_file)
+		values
+		<foreach collection="fileInfos" item="fileinfo" separator=" , ">
+			(#{articleNo}, #{fileinfo.saveFolder}, #{fileinfo.originalFile}, #{fileinfo.saveFile})
+		</foreach>
+	</insert>
+
+	<sql id="search">
+		<if test="word != null and word != ''">
+			<if test="key == 'subject'">
+				and subject like concat('%', #{word}, '%')
+			</if>
+			<if test="key != 'subject'">
+				and ${key} = #{word}
+			</if>
+		</if>
+	</sql>
+	
+	<insert id="writeArticle" parameterType="boardDto">
+		insert into free_posts (user_id, free_title, free_contents, free_views, created_at)
+		values (#{userId}, #{freeTitle}, #{freeContent}, 0, now())
+		<!-- <selectKey resultType="int" keyProperty="articleNo" order="AFTER">
+			select last_insert_id()
+		</selectKey> -->
+	</insert>
+
+	<!-- 전체 테이블 데이터 불러오는 부분 -->
+	<!-- 전체 테이블 데이터 불러오는 부분 -->
+	<select id="listArticle" parameterType="map" resultMap="article">
+		select f.free_post_id, f.free_title, f.free_contents, f.free_views, f.created_at, u.nick_name
+		from free_posts f, users u 
+		where f.user_id = u.user_id
+		<include refid="search"></include>
+		order by f.free_post_id desc
+		limit #{start}, #{listsize}
+	</select>
+	
+	<!-- 전체 테이블 데이터 개수 불러오는 부분 -->
+	<!-- 전체 테이블 데이터 개수 불러오는 부분 -->
+	<select id="getTotalArticleCount" parameterType="map" resultType="int">
+		select count(free_post_id)
+		from free_posts
+		<where>
+			<include refid="search"></include>
+		</where>
+	</select>
+	
+	<!-- 게시물 하나의 데이터를 불러오는 부분 -->
+	<!-- 게시물 하나의 데이터를 불러오는 부분 -->
+	<select id="getArticle" parameterType="int" resultMap="viewArticle">
+		select f.free_post_id, f.user_id, f.free_title, f.free_contents, f.free_views, f.created_at, u.nick_name 
+		from free_posts f, users u
+		where f.user_id = u.user_id 
+		and f.free_post_id = #{articleNo}
+	</select>
+	
+	<!-- 게시물 하나의 데이터를 불러올때 조회수 업데이트 해주는 부분 -->
+	<!-- 게시물 하나의 데이터를 불러올때 조회수 업데이트 해주는 부분 -->
+	<update id="updateHit" parameterType="int">
+		update free_posts
+		set free_views = free_views + 1
+		where free_post_id = #{articleNo}
+	</update>
+	
+	<!-- 게시물 수정 하는 부분 -->
+	<!-- 게시물 수정 하는 부분 -->
+	<update id="modifyArticle" parameterType="boardDto">
+		update free_posts
+		set free_title = #{freeTitle}, free_contents = #{freeContent}
+		where free_post_id = #{freePostId}
+	</update>
+	
+	
+	<delete id="deleteArticle" parameterType="int">
+		delete from free_posts
+		where free_post_id = #{articleNo}
+	</delete>
+	
+	
+	<select id="fileInfoList" resultMap="file">
+		select save_folder, original_file, save_file
+		from file_info
+		where article_no = #{articleNo}
+	</select>
+	
+	
+	<delete id="deleteFile" parameterType="int">
+		delete from file_info
+		where article_no = #{articleNo}
+	</delete>
+	
+
+</mapper>
